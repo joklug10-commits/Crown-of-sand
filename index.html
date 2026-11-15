@@ -386,6 +386,8 @@ html.phone #tut{top:auto;left:calc(6px + env(safe-area-inset-left,0px));bottom:c
 html.phone #assetLoad{display:none}
 html.phone #pcancel{display:block;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(60px + var(--dockH,0px) + env(safe-area-inset-bottom,0px));z-index:9;padding:8px 16px;font:inherit;font-weight:700;font-size:.85rem;color:var(--hink);border-radius:20px;cursor:pointer;white-space:nowrap}
 html.phone #pcancel[hidden]{display:none}
+html.touch #pcancel{display:block;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(170px + env(safe-area-inset-bottom,0px));z-index:9;padding:9px 18px;font:inherit;font-weight:700;font-size:.92rem;color:var(--hink);border-radius:20px;cursor:pointer;white-space:nowrap}
+html.touch #pcancel[hidden]{display:none}
 /* v58: start menu on an iPhone held sideways: two columns, everything fits without scrolling */
 @media (orientation: landscape) and (max-height:540px){
   html.phone #overlay{padding:6px}
@@ -743,6 +745,7 @@ const view = $('view');
 let renderer;
 try { renderer = new THREE.WebGLRenderer({antialias:true}); } catch (e){ $('err').style.display = 'flex'; return; }
 // phones get a lighter build: no high-poly building models, smaller ground canvases (WebKit on a phone has far less memory per page than on an iPad)
+const TOUCH = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e){ return false; } })();
 const PHONE = (() => { try { return window.matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600; } catch (e){ return false; } })();
 let QUAL = 2; try { const q = localStorage.getItem('wf_qual'); if (q !== null) QUAL = +q; else if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) QUAL = 1; } catch (e){}
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, [1, 1.25, 1.75][QUAL]));
@@ -2135,7 +2138,7 @@ function genMapV1(seed){
 
 /* ================= terrain & decoration ================= */
 function paintTerrain(){
-  const P = PHONE ? 16 : 32, cw = W * P, ch = H * P, c = document.createElement('canvas'); c.width = cw; c.height = ch;
+  const P = 16, cw = W * P, ch = H * P, c = document.createElement('canvas'); c.width = cw; c.height = ch;
   const g = c.getContext('2d');
   g.fillStyle = '#d4b47b'; g.fillRect(0, 0, cw, ch);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){ const hv = HG[(y * 2 + 1) * GW + x * 2 + 1]; if (hv > 0.35){ g.fillStyle = `rgba(245,225,180,${clamp((hv - 0.35) * 0.35, 0, 0.25)})`; g.fillRect(x * P, y * P, P, P); } }
@@ -5317,6 +5320,7 @@ function drawHUD(){
 function drawMini(){
   if (!miniBase) return;
   const mw = mini.width, mh = mini.height, sx = mw / W, sy = mh / H;
+  mctx.fillStyle = '#d4b47b'; mctx.fillRect(0, 0, mw, mh);
   mctx.drawImage(miniBase, 0, 0, mw, mh);
   if (pKeep){
     mctx.strokeStyle = 'rgba(179,54,46,.85)'; mctx.lineWidth = 1; mctx.beginPath();
@@ -5666,8 +5670,24 @@ function phoneSync(){
   const top = document.querySelector('.top'); if (top) H0.style.setProperty('--topH', top.offsetHeight + 'px');
   H0.style.setProperty('--dockH', dockOn ? ($('dock').offsetHeight + 6) + 'px' : '0px');
   for (const b of document.querySelectorAll('#ptab [data-pa]')){ const k = b.dataset.pa; b.classList.toggle('on', k === 'build' ? dockOn && dockMode === 'build' : k === 'map' ? PUI.map : pOpen && pTab === k); if (k === 'markt') b.hidden = $('poMarkt').hidden; }
-  const c = $('pcancel');
-  if (c){ const txt = mode ? `✕ ${mode === 'demolish' ? 'Abreißen' : BT[mode] ? BT[mode].name : 'Bauen'} beenden` : cmdMode ? '✕ Befehl abbrechen' : ''; c.hidden = !play || !txt; if (c.textContent !== txt) c.textContent = txt; }
+  cancelSync();
+}
+// touch screens have no Esc key: one button ends a build mode or command, or clears the selection
+function cancelSync(){
+  const c = $('pcancel'); if (!c) return;
+  const n = [...sel].filter(u => !u.dead).length;
+  const txt = mode ? `✕ ${mode === 'demolish' ? 'Abreißen' : BT[mode] ? BT[mode].name : 'Bauen'} beenden` : cmdMode ? '✕ Befehl abbrechen'
+    : n ? `✕ Auswahl aufheben (${n})` : selB && !selB.dead ? `✕ ${BT[selB.type] ? BT[selB.type].name : 'Gebäude'} abwählen` : '';
+  c.hidden = phase !== 'play' || !txt; if (c.textContent !== txt) c.textContent = txt;
+}
+function cancelClick(){
+  if (mode){ setMode(null); if (PHONE) PUI.build = true; } else if (cmdMode) cmdMode = null; else { sel.clear(); selB = null; selKey = ''; }
+  refreshUI(); if (PHONE) phoneSync(); else cancelSync();
+}
+if (TOUCH && !PHONE){
+  document.documentElement.classList.add('touch');
+  const c = document.createElement('button'); c.id = 'pcancel'; c.className = 'hudbox'; c.hidden = true; $('view').appendChild(c); c.onclick = cancelClick;
+  setInterval(cancelSync, 250);
 }
 if (PHONE){
   document.documentElement.classList.add('phone'); pOpen = false;
@@ -5676,7 +5696,7 @@ if (PHONE){
     .map(([k, i, n]) => `<button data-pa="${k}"><span class="k" aria-hidden="true">${i}</span><span class="l">${n}</span></button>`).join('');
   $('view').appendChild(tb);
   const cancel = document.createElement('button'); cancel.id = 'pcancel'; cancel.className = 'hudbox'; cancel.hidden = true; $('view').appendChild(cancel);
-  cancel.onclick = () => { if (mode){ setMode(null); PUI.build = true; } cmdMode = null; refreshUI(); phoneSync(); };
+  cancel.onclick = cancelClick;
   tb.addEventListener('click', e => { const b = e.target.closest('[data-pa]'); if (!b || !playing()) return; const k = b.dataset.pa;
     if (k === 'build'){ if (dockMode !== 'build'){ sel.clear(); selB = null; refreshUI(); PUI.build = true; } else PUI.build = !PUI.build; if (PUI.build){ pOpen = false; updPanel(); } }
     else if (k === 'map') PUI.map = !PUI.map;
