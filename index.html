@@ -1119,7 +1119,7 @@ async function loadAnimModels(){
     const clips = {}; for (const c of gltf.animations) clips[c.name] = c;
     if (!clips.walk || !clips.chop) throw new Error('Animationen fehlen');
     clips.idle = THREE.AnimationUtils.subclip(clips.chop, 'idle', 0, 2, 30);   // calm standing pose until a real idle clip exists
-    gltf.scene.traverse(o => { if (o.isMesh){ o.castShadow = true; o.frustumCulled = false; if (o.material){ o.material.metalness = 0; o.material.roughness = 0.88; } } });
+    gltf.scene.traverse(o => { if (o.isMesh){ o.castShadow = true; o.frustumCulled = false; if (o.material){ o.material.metalness = 0; o.material.roughness = 0.88; o.material.normalMap = null; o.material.side = THREE.FrontSide; o.material.needsUpdate = true; } } });   // no normal map and no back faces: on iPad/iPhone those turned the figures into dark hollow shells
     PEAS_ANIM = {scene:gltf.scene, clips, scale:0.53 / 1.66};
     for (const p of people) if (!p.dead && p.vis){ const old = p.vis, nv = makePeasantVis(p.team); nv.yaw = old.yaw; if (old.g.parent) old.g.parent.remove(old.g); p.vis = nv; }
   } catch (e){ console.warn('Animierte Figur nicht geladen:', e && e.message); PEAS_ANIM = null; }
@@ -1189,7 +1189,7 @@ async function loadArcherModel(){
     const gltf = await new Promise((ok, bad) => new THREE.GLTFLoader().parse(bytes.buffer, '', ok, bad));
     const clips = {}; for (const c of gltf.animations) clips[c.name] = c;
     for (const k of ['idle', 'walk', 'bowrun', 'shoot', 'death']) if (!clips[k]) throw new Error('Animation fehlt: ' + k);
-    gltf.scene.traverse(o => { if (o.isMesh){ o.castShadow = true; o.frustumCulled = false; if (o.material){ o.material.metalness = 0; o.material.roughness = 0.88; } } });
+    gltf.scene.traverse(o => { if (o.isMesh){ o.castShadow = true; o.frustumCulled = false; if (o.material){ o.material.metalness = 0; o.material.roughness = 0.88; o.material.normalMap = null; o.material.side = THREE.FrontSide; o.material.needsUpdate = true; } } });   // no normal map and no back faces: on iPad/iPhone those turned the figures into dark hollow shells
     ARCH_ANIM = {scene:gltf.scene, clips, scale:0.53 / 1.75};
     for (const u of units) if (u.type === 'archer' && !u.dead && u.vis && !u.vis.archer){ const old = u.vis, nv = makeSoldierVis('archer', u.team); nv.yaw = old.yaw; disposeVis(old.root); u.vis = nv; }
     try { makeThumbs(); } catch (e){}
@@ -1262,7 +1262,7 @@ async function loadMx(k){
   const bytes = b64ToBytes(await res.text());
   const gltf = await new Promise((ok, bad) => new THREE.GLTFLoader().parse(bytes.buffer, '', ok, bad));
   const clips = {}; for (const c of gltf.animations) clips[c.name] = c;
-  gltf.scene.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material){ o.material.metalness = 0; o.material.roughness = 0.88; } } });
+  gltf.scene.traverse(o => { if (o.isMesh){ o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material){ o.material.metalness = 0; o.material.roughness = 0.88; o.material.normalMap = null; o.material.side = THREE.FrontSide; o.material.needsUpdate = true; } } });   // no normal map and no back faces: on iPad/iPhone those turned the figures into dark hollow shells
   MX[k] = {scene:gltf.scene, clips};
 }
 /* Memory-friendly loading for phones: one model at a time, and only the ones the game actually needs */
