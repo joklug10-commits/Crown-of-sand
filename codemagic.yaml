@@ -1,0 +1,33 @@
+# Alternative zu GitHub Actions: Codemagic (codemagic.io) mit kostenlosem Kontingent an Mac-Minuten.
+# In Codemagic: Team › Integrations › App Store Connect verbinden (Name "ASC"), dann dieses Repo hinzufügen.
+workflows:
+  ios-testflight:
+    name: iOS TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: ASC
+    environment:
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: de.joklug.crownofsand
+    scripts:
+      - name: Web-App kopieren
+        script: |
+          npm ci
+          npm run build:www
+          npx cap sync ios
+      - name: Signatur einrichten
+        script: xcode-project use-profiles
+      - name: Bauen
+        script: |
+          agvtool new-version -all $((100 + BUILD_NUMBER)) || true
+          xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

@@ -1,0 +1,65 @@
+# Baut die iOS-App auf einem Mac von GitHub und lädt sie zu TestFlight hoch. Kein eigener Mac nötig.
+# Einmalig in GitHub unter Settings › Secrets and variables › Actions anlegen:
+#   APPLE_TEAM_ID   – 10-stellige Team-ID aus developer.apple.com › Membership
+#   ASC_KEY_ID      – Key ID des App-Store-Connect-API-Schlüssels
+#   ASC_ISSUER_ID   – Issuer ID (steht über der Schlüsselliste)
+#   ASC_KEY_P8      – kompletter Inhalt der heruntergeladenen AuthKey_XXXX.p8-Datei
+# Start: Actions › "iOS TestFlight" › Run workflow
+name: iOS TestFlight
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Nach TestFlight hochladen (sonst nur bauen)
+        type: boolean
+        default: true
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 75
+    env:
+      TEAM: ${{ secrets.APPLE_TEAM_ID }}
+      KEYID: ${{ secrets.ASC_KEY_ID }}
+      ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Neueste Xcode-Version wählen
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)
+          sudo xcode-select -s "$X"; xcodebuild -version
+      - name: Web-App in das iOS-Projekt kopieren
+        run: |
+          npm ci
+          npm run build:www
+          npx cap sync ios
+      - name: App-Store-Connect-Schlüssel ablegen
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          test -n "$TEAM" -a -n "$KEYID" -a -n "$ISSUER" -a -n "$ASC_KEY_P8" || { echo "Secrets fehlen (siehe Kopf dieser Datei)"; exit 1; }
+          mkdir -p ~/private_keys
+          printf '%s\n' "$ASC_KEY_P8" > ~/private_keys/AuthKey_$KEYID.p8
+      - name: Archiv bauen
+        run: |
+          BUILD=$(( 100 + ${{ github.run_number }} ))
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic CURRENT_PROJECT_VERSION=$BUILD \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_$KEYID.p8 -authenticationKeyID "$KEYID" -authenticationKeyIssuerID "$ISSUER" \
+            archive | tail -40
+          test -d "$RUNNER_TEMP/App.xcarchive"
+      - name: Zu TestFlight hochladen
+        if: ${{ inputs.upload }}
+        run: |
+          sed -i '' "s/TEAM_ID_PLACEHOLDER/$TEAM/" ios/ExportOptions.plist
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist ios/ExportOptions.plist -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_$KEYID.p8 -authenticationKeyID "$KEYID" -authenticationKeyIssuerID "$ISSUER"
+      - name: Schlüssel entfernen
+        if: always()
+        run: rm -rf ~/private_keys

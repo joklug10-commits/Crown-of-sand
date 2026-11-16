@@ -1,0 +1,16 @@
+{
+  "appId": "de.joklug.crownofsand",
+  "appName": "Crown of Sand",
+  "webDir": "www",
+  "backgroundColor": "#120d08",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#120d08",
+    "scrollEnabled": false,
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 600, "backgroundColor": "#120d08", "showSpinner": false },
+    "StatusBar": { "overlaysWebView": true, "style": "DARK" }
+  }
+}
