@@ -2,7 +2,7 @@
 
 Build. Defend. Conquer. Ein Burgen-Strategiespiel für Browser, iPhone und iPad.
 
-- **Spielen (Web-App):** https://joklug10-commits.github.io/crown-of-sand/ – in Safari öffnen, Teilen › „Zum Home-Bildschirm“.
+- **Spielen (Web-App):** https://joklug10-commits.github.io/Crown-of-sand/ – in Safari öffnen, Teilen › „Zum Home-Bildschirm“.
 - **Datenschutz:** [privacy.html](privacy.html) · **Impressum:** [impressum.html](impressum.html) · **Lizenzen:** [credits.html](credits.html)
 
 ## Aufbau

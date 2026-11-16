@@ -44,8 +44,8 @@ FAIR
 **What's new:** First release.
 
 **URLs**
-- Support: https://joklug10-commits.github.io/crown-of-sand/impressum.html
-- Privacy: https://joklug10-commits.github.io/crown-of-sand/privacy.html
+- Support: https://joklug10-commits.github.io/Crown-of-sand/impressum.html
+- Privacy: https://joklug10-commits.github.io/Crown-of-sand/privacy.html
 
 **App privacy questionnaire:** "Data Not Collected".
 

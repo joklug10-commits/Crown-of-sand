@@ -44,9 +44,9 @@ FAIR
 **Neu in dieser Version:** Erste Veröffentlichung.
 
 **URLs**
-- Support: https://joklug10-commits.github.io/crown-of-sand/impressum.html
-- Datenschutz: https://joklug10-commits.github.io/crown-of-sand/privacy.html
-- Marketing (optional): https://joklug10-commits.github.io/crown-of-sand/
+- Support: https://joklug10-commits.github.io/Crown-of-sand/impressum.html
+- Datenschutz: https://joklug10-commits.github.io/Crown-of-sand/privacy.html
+- Marketing (optional): https://joklug10-commits.github.io/Crown-of-sand/
 
 **App-Datenschutz (Fragebogen in App Store Connect):** „Daten werden nicht erfasst“.
 

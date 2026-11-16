@@ -7155,7 +7155,7 @@ function showSettings(){
     ${ERRLOG.length ? `<div class="grid" style="margin:6px 0"><button class="bb" id="stErrShare"><span class="bn">Teilen / kopieren</span><span class="bc">für die Fehlermeldung</span></button><button class="bb" id="stErrClr"><span class="bn">Leeren</span><span class="bc">Protokoll löschen</span></button></div>` : ''}
     <h3>Über das Spiel</h3>
     <p class="note">Crown of Sand · Version ${VER}. 3D-Figuren und Tiere erstellt mit Meshy (meshy.ai). Schriften Cinzel und Alegreya Sans (SIL Open Font License). 3D-Grafik mit three.js (MIT-Lizenz).</p>
-    <p class="note"><a href="https://joklug10-commits.github.io/crown-of-sand/credits.html" target="_blank" rel="noopener">Lizenzen</a> · <a href="https://joklug10-commits.github.io/crown-of-sand/privacy.html" target="_blank" rel="noopener">Datenschutz</a> · <a href="https://joklug10-commits.github.io/crown-of-sand/impressum.html" target="_blank" rel="noopener">Impressum</a></p>
+    <p class="note"><a href="https://joklug10-commits.github.io/Crown-of-sand/credits.html" target="_blank" rel="noopener">Lizenzen</a> · <a href="https://joklug10-commits.github.io/Crown-of-sand/privacy.html" target="_blank" rel="noopener">Datenschutz</a> · <a href="https://joklug10-commits.github.io/Crown-of-sand/impressum.html" target="_blank" rel="noopener">Impressum</a></p>
     <button class="go" id="helpClose">Schließen</button>`;
   const wire = (id, f) => $(id).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); f(b.dataset.v); });
   wire('stQual', v => setQuality(+v));
